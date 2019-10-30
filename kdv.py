@@ -14,19 +14,28 @@ class PycoderSpider(scrapy.Spider):
 	]
 	visited_urls = []
 	offset = 0
+	rooms = []
 
 	def parse(self, response):
+			count = int(float (response.xpath('count(//a[@class="hotel_name_link url"]/@href)').extract()[0]))
 			for post_link in response.xpath('//a[@class="hotel_name_link url"]/@href').getall():
 				post_link = post_link.replace("\r","")
 				post_link = post_link.replace("\n","")
 				post_link = post_link.replace("\t","")
 				url = urljoin(response.url , post_link)
+				yield scrapy.Request(url,callback=self.parsehotel)
 				print("	JOINED TO HOTEL:" + url)
 				 
-				
+			print (count)
+			if(count<=1):
+				return
 
 			self.offset += 25
 			#&offset=
 			next_page_url = self.start_urls[0] + "&offset=" + str(self.offset) 
 			yield scrapy.Request(next_page_url,callback=self.parse)
 		
+	def parsehotel(self, response):
+		for hotel in response.xpath('//a[@class="hotel_name_link url"]/@href').getall():
+			hot = urljoin(response.hot , hotel)
+			#for hot in response.xpath('//a[@class=""]/@text')
